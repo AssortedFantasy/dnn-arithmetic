@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 ArrayNp = np.ndarray
 ArrayJnp = jax.Array
 ModelFactory = Callable[[int, int, jax.Array], Module]
+EvalDataset = tuple[ArrayNp, ArrayNp]
 
 
 @dataclass(frozen=True)
@@ -257,6 +258,7 @@ def train_model(
     key: jax.Array,
     config: TrainingConfig,
     model_factory: ModelFactory,
+    eval_data: EvalDataset | None = None,
 ) -> TrainResult:
     """Train a single model on a dataset.
 
@@ -266,6 +268,7 @@ def train_model(
         key: JAX key for initialization and shuffling.
         config: Training configuration.
         model_factory: Callable mapping ``(in_dim, out_dim, key)`` to a model.
+        eval_data: Optional held-out dataset used only for evaluation logging.
 
     Returns:
         Training result containing the model and logged losses.
@@ -279,6 +282,8 @@ def train_model(
         raise ValueError("log_every must be positive.")
     if not (0.0 <= config.test_fraction < 1.0):
         raise ValueError("test_fraction must be in [0, 1).")
+    if eval_data is not None and config.test_fraction > 0.0:
+        raise ValueError("Use either config.test_fraction or eval_data, not both.")
 
     x_feat = np.asarray(x_feat)
     y_feat = np.asarray(y_feat)
@@ -293,7 +298,11 @@ def train_model(
     init_key, split_key, train_iter_key, test_iter_key = jax.random.split(key, 4)
     model = model_factory(in_dim, out_dim, init_key)
 
-    if config.test_fraction > 0.0:
+    if eval_data is not None:
+        x_train, y_train = x_feat, y_feat
+        x_test = np.asarray(eval_data[0])
+        y_test = np.asarray(eval_data[1])
+    elif config.test_fraction > 0.0:
         test_data, train_data = test_train_split(
             [x_feat, y_feat],
             test_fraction=config.test_fraction,
@@ -402,5 +411,6 @@ __all__ = [
     "TrainingConfig",
     "TrainResult",
     "ModelFactory",
+    "EvalDataset",
     "train_model",
 ]

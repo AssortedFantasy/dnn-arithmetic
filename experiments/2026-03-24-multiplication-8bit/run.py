@@ -17,12 +17,15 @@ import numpy as np
 from flax import nnx
 
 from dnn_arithmetic.models import ReluMLP, ResidualReluMLP, batched_predict
+from dnn_arithmetic.plotting import LineSeries, save_line_plot
 from dnn_arithmetic.training import OptimizerConfig, TrainingConfig, train_model
 
 RUN_DIR = Path(__file__).resolve().parent
 OUTPUT_DIR = RUN_DIR / "outputs"
 METRICS_PATH = OUTPUT_DIR / "metrics.json"
 SUMMARY_PATH = OUTPUT_DIR / "summary.txt"
+TRAIN_LOSS_PLOT_PATH = OUTPUT_DIR / "train_loss.png"
+TEST_LOSS_PLOT_PATH = OUTPUT_DIR / "test_loss.png"
 
 
 @dataclass(frozen=True)
@@ -95,6 +98,9 @@ class ExperimentRecord:
         spec: Architecture configuration.
         train_metrics: Metrics on the training split.
         test_metrics: Metrics on the held-out split.
+        step_history: Training steps corresponding to the logged losses.
+        train_loss_history: Mean train loss over each logging interval.
+        test_loss_history: Test loss at each logging interval.
         elapsed: Wall-clock training time.
         final_train_loss: Final logged train loss.
 
@@ -103,6 +109,9 @@ class ExperimentRecord:
     spec: ExperimentSpec
     train_metrics: EvalMetrics
     test_metrics: EvalMetrics
+    step_history: list[int]
+    train_loss_history: list[float]
+    test_loss_history: list[float]
     elapsed: float
     final_train_loss: float
 
@@ -352,6 +361,7 @@ def _run_experiment(
         key=jax.random.key(seed),
         config=config,
         model_factory=model_factory,
+        eval_data=(split.x_test, split.y_test),
     )
 
     train_pred = batched_predict(
@@ -370,6 +380,9 @@ def _run_experiment(
         spec=spec,
         train_metrics=train_metrics,
         test_metrics=test_metrics,
+        step_history=result.step_history,
+        train_loss_history=result.train_loss_history,
+        test_loss_history=result.test_loss_history,
         elapsed=result.elapsed,
         final_train_loss=float(final_train_loss),
     )
@@ -451,6 +464,51 @@ def _write_outputs(
     SUMMARY_PATH.write_text("\n".join(summary_lines) + "\n")
 
 
+def _write_plots(records: list[ExperimentRecord]) -> None:
+    """Persist train and test loss plots for the full architecture sweep."""
+    train_series = [
+        LineSeries(
+            label=record.spec.name,
+            x_values=np.asarray(record.step_history, dtype=np.float64),
+            y_values=np.asarray(record.train_loss_history, dtype=np.float64),
+        )
+        for record in records
+        if record.step_history and record.train_loss_history
+    ]
+    test_series = [
+        LineSeries(
+            label=record.spec.name,
+            x_values=np.asarray(
+                record.step_history[: len(record.test_loss_history)],
+                dtype=np.float64,
+            ),
+            y_values=np.asarray(record.test_loss_history, dtype=np.float64),
+        )
+        for record in records
+        if record.step_history and record.test_loss_history
+    ]
+
+    if train_series:
+        save_line_plot(
+            TRAIN_LOSS_PLOT_PATH,
+            train_series,
+            title="8-bit unsigned multiplication: train loss",
+            x_label="Number of steps",
+            y_label="Train MSE",
+            y_log=True,
+        )
+
+    if test_series:
+        save_line_plot(
+            TEST_LOSS_PLOT_PATH,
+            test_series,
+            title="8-bit unsigned multiplication: test loss",
+            x_label="Number of steps",
+            y_label="Test MSE",
+            y_log=True,
+        )
+
+
 def _parse_args() -> argparse.Namespace:
     """Parse command-line options for the benchmark script."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -507,6 +565,7 @@ def main() -> None:
             print(line)
 
     _write_outputs(args, split, config, records)
+    _write_plots(records)
     print(f"Saved outputs to {OUTPUT_DIR}")
 
 

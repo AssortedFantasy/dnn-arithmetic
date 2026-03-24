@@ -23,5 +23,8 @@ dependencies = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/dnn_arithmetic"]
+
 [tool.uv]
-package = false
+package = true

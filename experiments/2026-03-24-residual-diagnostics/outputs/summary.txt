@@ -1,0 +1,63 @@
+Residual diagnostics: 8-bit unsigned multiplication, 49152 train / 16384 test samples
+Training config: steps=6000, batch_size=256, probe_batch_size=1024, base_lr=2.00e-03, wd=1.00e-05, clip=1.00
+Diagnostic checkpoints: 0, 1, 2, 5, 10, 20, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900, 3000, 3100, 3200, 3300, 3400, 3500, 3600, 3700, 3800, 3900, 4000, 4100, 4200, 4300, 4400, 4500, 4600, 4700, 4800, 4900, 5000, 5100, 5200, 5300, 5400, 5500, 5600, 5700, 5800, 5900, 6000
+
+Key findings
+- Zero-init does change the early dynamics, but not by much after the first phase: at step 100 the mean residual-up grad is 2.703e-01 for zero-init versus 3.170e-01 for small-init, and by step 1000 the mean down-branch ratio is 2.467e-01 versus 2.395e-01.
+- Under the full training schedule, zero-init residual ends at final_train_loss=5.005e-01, while small-init ends at 4.906e-01 and lecun-init ends at 6.574e-01.
+- Clipping is secondary unless it shows up often: clipped diagnostic checkpoints zero-init=31/67, small-init=35/67.
+- Learning-rate sensitivity is measured only after fixing init: small-init @1e-3 ends at 5.732e-01, @2e-3 at 4.906e-01, @4e-3 at 6.895e-01.
+- Bottleneck pressure is checked with a wider residual branch: b64 small-init ends at 4.906e-01, b128 small-init ends at 1.551e-01.
+- Best residual variant in this sweep: res-256-b128-x8-bias-smallinit with final_train_loss=1.551e-01; MLP control reaches 9.927e-02.
+
+Selected checkpoints
+res-256-b64-x8-bias-zeroinit
+  step=100: probe_loss=2.959e+00, grad_norm=6.482e+00, clip=True, mean_up_grad=2.703e-01, mean_down_grad=1.339e+00, mean_down_branch_ratio=3.926e-02
+  step=1000: probe_loss=1.399e+00, grad_norm=1.259e+00, clip=True, mean_up_grad=1.633e-01, mean_down_grad=1.712e-01, mean_down_branch_ratio=2.467e-01
+  step=6000: probe_loss=4.904e-01, grad_norm=5.618e-01, clip=False, mean_up_grad=1.031e-01, mean_down_grad=1.082e-01, mean_down_branch_ratio=4.873e-01
+
+res-256-b64-x8-bias-smallinit
+  step=100: probe_loss=2.944e+00, grad_norm=5.045e+00, clip=True, mean_up_grad=3.170e-01, mean_down_grad=1.005e+00, mean_down_branch_ratio=6.769e-02
+  step=1000: probe_loss=1.430e+00, grad_norm=1.407e+00, clip=True, mean_up_grad=1.752e-01, mean_down_grad=1.859e-01, mean_down_branch_ratio=2.395e-01
+  step=6000: probe_loss=4.932e-01, grad_norm=6.274e-01, clip=False, mean_up_grad=1.175e-01, mean_down_grad=1.220e-01, mean_down_branch_ratio=4.811e-01
+
+res-256-b128-x8-bias-smallinit
+  step=100: probe_loss=2.798e+00, grad_norm=4.406e+00, clip=True, mean_up_grad=2.610e-01, mean_down_grad=1.017e+00, mean_down_branch_ratio=6.686e-02
+  step=1000: probe_loss=1.291e+00, grad_norm=1.150e+00, clip=True, mean_up_grad=1.521e-01, mean_down_grad=1.497e-01, mean_down_branch_ratio=2.485e-01
+  step=6000: probe_loss=1.446e-01, grad_norm=4.015e-01, clip=False, mean_up_grad=7.611e-02, mean_down_grad=8.010e-02, mean_down_branch_ratio=4.837e-01
+
+Full results
+mlp-256x4-bias
+  steps=6000, elapsed=9.24s, final_train_loss=9.927e-02, lr=2.00e-03
+  train: mse=5.997e-03, bit_acc=0.9984, exact_acc=0.9765, mean_abs_prod_err=14.034, max_abs_prod_err=16896
+  test : mse=1.430e-02, bit_acc=0.9876, exact_acc=0.8745, mean_abs_prod_err=149.177, max_abs_prod_err=32768
+
+res-256-b64-x8-bias-zeroinit
+  steps=6000, elapsed=22.52s, final_train_loss=5.005e-01, lr=2.00e-03, down_init=zero
+  train: mse=3.077e-02, bit_acc=0.9609, exact_acc=0.5696, mean_abs_prod_err=136.689, max_abs_prod_err=6784
+  test : mse=4.154e-02, bit_acc=0.9418, exact_acc=0.4650, mean_abs_prod_err=243.299, max_abs_prod_err=25696
+
+res-256-b64-x8-bias-smallinit
+  steps=6000, elapsed=21.69s, final_train_loss=4.906e-01, lr=2.00e-03, down_init=small
+  train: mse=3.011e-02, bit_acc=0.9624, exact_acc=0.5882, mean_abs_prod_err=127.585, max_abs_prod_err=8192
+  test : mse=4.350e-02, bit_acc=0.9393, exact_acc=0.4608, mean_abs_prod_err=241.244, max_abs_prod_err=22272
+
+res-256-b64-x8-bias-lecuninit
+  steps=6000, elapsed=22.14s, final_train_loss=6.574e-01, lr=2.00e-03, down_init=lecun
+  train: mse=4.055e-02, bit_acc=0.9425, exact_acc=0.4292, mean_abs_prod_err=198.180, max_abs_prod_err=17472
+  test : mse=5.223e-02, bit_acc=0.9196, exact_acc=0.3299, mean_abs_prod_err=299.117, max_abs_prod_err=29696
+
+res-256-b64-x8-bias-smallinit-lr1e-3
+  steps=6000, elapsed=22.69s, final_train_loss=5.732e-01, lr=1.00e-03, down_init=small
+  train: mse=3.528e-02, bit_acc=0.9527, exact_acc=0.4762, mean_abs_prod_err=172.949, max_abs_prod_err=13184
+  test : mse=4.341e-02, bit_acc=0.9365, exact_acc=0.3879, mean_abs_prod_err=279.264, max_abs_prod_err=24864
+
+res-256-b64-x8-bias-smallinit-lr4e-3
+  steps=6000, elapsed=23.01s, final_train_loss=6.895e-01, lr=4.00e-03, down_init=small
+  train: mse=4.223e-02, bit_acc=0.9378, exact_acc=0.3924, mean_abs_prod_err=214.823, max_abs_prod_err=20416
+  test : mse=5.248e-02, bit_acc=0.9167, exact_acc=0.3128, mean_abs_prod_err=321.395, max_abs_prod_err=23552
+
+res-256-b128-x8-bias-smallinit
+  steps=6000, elapsed=22.12s, final_train_loss=1.551e-01, lr=2.00e-03, down_init=small
+  train: mse=9.133e-03, bit_acc=0.9942, exact_acc=0.9169, mean_abs_prod_err=23.191, max_abs_prod_err=4096
+  test : mse=2.658e-02, bit_acc=0.9692, exact_acc=0.7033, mean_abs_prod_err=161.957, max_abs_prod_err=25536

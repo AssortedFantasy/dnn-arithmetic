@@ -18,6 +18,13 @@ def _zero_init(
     return jnp.zeros(shape, dtype=dtype)
 
 
+def _small_residual_init(
+    key: jax.Array, shape: Sequence[int], dtype: Any = jnp.float32
+) -> jax.Array:
+    base_init = jax.nn.initializers.lecun_normal()
+    return 0.1 * base_init(key, shape, dtype)
+
+
 class ReluMLP(nnx.Module):
     """Simple RELU MLP."""
 
@@ -96,6 +103,8 @@ class ResidualReluMLP(nnx.Module):
         inter_dim: int,
         num_blocks: int,
         rngs: nnx.Rngs,
+        *,
+        down_kernel_init: nnx.Initializer = _small_residual_init,
     ):
         self.in_proj = nnx.Linear(in_dim, residual_dim, rngs=rngs)
         self.out_proj = nnx.Linear(residual_dim, out_dim, rngs=rngs)
@@ -108,7 +117,7 @@ class ResidualReluMLP(nnx.Module):
                 nnx.Linear(
                     inter_dim,
                     residual_dim,
-                    kernel_init=_zero_init,
+                    kernel_init=down_kernel_init,
                     rngs=rngs,
                 )
             )

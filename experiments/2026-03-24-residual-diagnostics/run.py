@@ -38,6 +38,9 @@ TRAIN_LOSS_PLOT_PATH = OUTPUT_DIR / "train_loss.png"
 TEST_LOSS_PLOT_PATH = OUTPUT_DIR / "test_loss.png"
 GRAD_NORM_PLOT_PATH = OUTPUT_DIR / "grad_norm.png"
 BRANCH_RATIO_PLOT_PATH = OUTPUT_DIR / "branch_ratio.png"
+RESIDUAL_STREAM_DEPTH_PLOT_PATH = OUTPUT_DIR / "residual_stream_depth.png"
+UP_GRAD_DEPTH_PLOT_PATH = OUTPUT_DIR / "up_grad_depth.png"
+DOWN_GRAD_DEPTH_PLOT_PATH = OUTPUT_DIR / "down_grad_depth.png"
 
 Array = jax.Array | np.ndarray
 
@@ -1335,6 +1338,168 @@ def _count_clipped_snapshots(record: ExperimentRecord) -> int:
     return sum(1 for snapshot in record.diagnostic_snapshots if snapshot.clip_applied)
 
 
+def _block_index(stat_name: str) -> int | None:
+    """Extract the residual block index from a layer-stat name.
+
+    Args:
+        stat_name: Layer-stat name such as ``block_3_up``.
+
+    Returns:
+        Parsed block index, or ``None`` if the name is not block-scoped.
+
+    """
+
+    parts = stat_name.split("_")
+    if len(parts) < 3 or parts[0] != "block":
+        return None
+    try:
+        return int(parts[1])
+    except ValueError:
+        return None
+
+
+def _block_metric_values(
+    snapshot: DiagnosticSnapshot,
+    *,
+    name_suffix: str,
+    metric_name: str,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Collect one block-wise metric vector from a diagnostic snapshot.
+
+    Args:
+        snapshot: Diagnostic snapshot.
+        name_suffix: Required suffix such as ``"_up"`` or ``"_down"``.
+        metric_name: Metric field on ``LayerSnapshot``.
+
+    Returns:
+        Pair ``(block_indices, metric_values)``.
+
+    """
+
+    matched: list[tuple[int, float]] = []
+    for stat in snapshot.layer_stats:
+        if not stat.name.endswith(name_suffix):
+            continue
+        block_index = _block_index(stat.name)
+        if block_index is None:
+            continue
+        matched.append((block_index, float(getattr(stat, metric_name))))
+    matched.sort(key=lambda item: item[0])
+    return (
+        np.asarray([item[0] for item in matched], dtype=np.float64),
+        np.asarray([item[1] for item in matched], dtype=np.float64),
+    )
+
+
+def _depth_profile_steps(total_steps: int) -> list[int]:
+    """Choose representative checkpoints for depth-profile plots.
+
+    Args:
+        total_steps: Total number of optimization steps.
+
+    Returns:
+        Representative checkpoint steps.
+
+    """
+
+    return sorted({min(100, total_steps), min(1000, total_steps), total_steps})
+
+
+def _selected_depth_records(records: list[ExperimentRecord]) -> list[ExperimentRecord]:
+    """Choose the key residual runs to visualize by depth.
+
+    Args:
+        records: All experiment records.
+
+    Returns:
+        Subset of residual runs used for depth-profile plots.
+
+    """
+
+    keep_names = {
+        "res-256-b64-x8-bias-zeroinit",
+        "res-256-b64-x8-bias-smallinit",
+        "res-256-b128-x8-bias-smallinit",
+    }
+    return [record for record in records if record.spec.name in keep_names]
+
+
+def _depth_line_series(
+    records: list[ExperimentRecord],
+    *,
+    steps: list[int],
+    name_suffix: str,
+    metric_name: str,
+) -> list[LineSeries]:
+    """Build block-depth line series for selected records and checkpoints.
+
+    Args:
+        records: Residual experiment records to visualize.
+        steps: Representative checkpoints.
+        name_suffix: Required layer-stat suffix such as ``"_up"``.
+        metric_name: Metric field on ``LayerSnapshot``.
+
+    Returns:
+        Plot-ready line series.
+
+    """
+
+    linestyles = ["-", "--", ":"]
+    series: list[LineSeries] = []
+    for record in records:
+        for index, step in enumerate(steps):
+            snapshot = _get_snapshot(record, step)
+            x_values, y_values = _block_metric_values(
+                snapshot,
+                name_suffix=name_suffix,
+                metric_name=metric_name,
+            )
+            series.append(
+                LineSeries(
+                    label=f"{record.spec.name} @ {step}",
+                    x_values=x_values,
+                    y_values=y_values,
+                    linestyle=linestyles[index % len(linestyles)],
+                )
+            )
+    return series
+
+
+def _stream_endpoint_summary(record: ExperimentRecord, step: int) -> str:
+    """Summarize early-vs-late residual-stream RMS and gradient scales.
+
+    Args:
+        record: Residual experiment record.
+        step: Diagnostic checkpoint.
+
+    Returns:
+        Compact text summary for the first and last residual block.
+
+    """
+
+    snapshot = _get_snapshot(record, step)
+    _, stream_values = _block_metric_values(
+        snapshot,
+        name_suffix="_down",
+        metric_name="stream_rms",
+    )
+    _, up_grad_values = _block_metric_values(
+        snapshot,
+        name_suffix="_up",
+        metric_name="kernel_grad_norm",
+    )
+    _, down_grad_values = _block_metric_values(
+        snapshot,
+        name_suffix="_down",
+        metric_name="kernel_grad_norm",
+    )
+    return (
+        f"  step={step}: stream_rms[first,last]=({stream_values[0]:.3e}, {stream_values[-1]:.3e}), "
+        f"up_grad[first,last]=({up_grad_values[0]:.3e}, {up_grad_values[-1]:.3e}), "
+        f"down_grad[first,last]=({down_grad_values[0]:.3e}, {down_grad_values[-1]:.3e})"
+    )
+
+
 def _snapshot_line(record: ExperimentRecord, step: int) -> str:
     """Render a compact snapshot summary line.
 
@@ -1423,6 +1588,11 @@ def _build_summary_lines(
             f"{_mean_branch_ratio(small_init_step1000, '_down'):.3e}."
         ),
         (
+            "- Earlier-versus-later block dynamics are now reported explicitly: see the depth profiles "
+            "for residual-stream RMS, up-projection gradient norm, and down-projection gradient norm "
+            "at steps 100, 1000, and 6000."
+        ),
+        (
             "- Under the full training schedule, zero-init residual ends at "
             f"final_train_loss={baseline.final_train_loss:.3e}, while small-init ends at "
             f"{small_init.final_train_loss:.3e} and lecun-init ends at {lecun_init.final_train_loss:.3e}."
@@ -1462,6 +1632,22 @@ def _build_summary_lines(
         _snapshot_line(wider, min(100, config.steps)),
         _snapshot_line(wider, min(1000, config.steps)),
         _snapshot_line(wider, config.steps),
+        "",
+        "Depth endpoint summaries",
+        baseline.spec.name,
+        _stream_endpoint_summary(baseline, min(100, config.steps)),
+        _stream_endpoint_summary(baseline, min(1000, config.steps)),
+        _stream_endpoint_summary(baseline, config.steps),
+        "",
+        small_init.spec.name,
+        _stream_endpoint_summary(small_init, min(100, config.steps)),
+        _stream_endpoint_summary(small_init, min(1000, config.steps)),
+        _stream_endpoint_summary(small_init, config.steps),
+        "",
+        wider.spec.name,
+        _stream_endpoint_summary(wider, min(100, config.steps)),
+        _stream_endpoint_summary(wider, min(1000, config.steps)),
+        _stream_endpoint_summary(wider, config.steps),
         "",
         "Full results",
     ]
@@ -1575,6 +1761,26 @@ def _write_plots(records: list[ExperimentRecord]) -> None:
         for record in records
         if record.spec.model_kind == "residual" and record.diagnostic_snapshots
     ]
+    depth_records = _selected_depth_records(records)
+    depth_steps = _depth_profile_steps(max(record.step_history[-1] for record in records))
+    residual_stream_series = _depth_line_series(
+        depth_records,
+        steps=depth_steps,
+        name_suffix="_down",
+        metric_name="stream_rms",
+    )
+    up_grad_depth_series = _depth_line_series(
+        depth_records,
+        steps=depth_steps,
+        name_suffix="_up",
+        metric_name="kernel_grad_norm",
+    )
+    down_grad_depth_series = _depth_line_series(
+        depth_records,
+        steps=depth_steps,
+        name_suffix="_down",
+        metric_name="kernel_grad_norm",
+    )
 
     if train_series:
         save_line_plot(
@@ -1611,6 +1817,33 @@ def _write_plots(records: list[ExperimentRecord]) -> None:
             x_label="Number of steps",
             y_label="Mean down-branch / stream RMS",
             y_log=False,
+        )
+    if residual_stream_series:
+        save_line_plot(
+            RESIDUAL_STREAM_DEPTH_PLOT_PATH,
+            residual_stream_series,
+            title="Residual diagnostics: residual-stream RMS by block",
+            x_label="Residual block index",
+            y_label="Residual-stream RMS before block",
+            y_log=False,
+        )
+    if up_grad_depth_series:
+        save_line_plot(
+            UP_GRAD_DEPTH_PLOT_PATH,
+            up_grad_depth_series,
+            title="Residual diagnostics: up-projection grad norm by block",
+            x_label="Residual block index",
+            y_label="Up-projection kernel grad norm",
+            y_log=True,
+        )
+    if down_grad_depth_series:
+        save_line_plot(
+            DOWN_GRAD_DEPTH_PLOT_PATH,
+            down_grad_depth_series,
+            title="Residual diagnostics: down-projection grad norm by block",
+            x_label="Residual block index",
+            y_label="Down-projection kernel grad norm",
+            y_log=True,
         )
 
 

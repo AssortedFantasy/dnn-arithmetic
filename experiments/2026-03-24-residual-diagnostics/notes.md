@@ -25,6 +25,9 @@ The important diagnostic comparison is not just step 0. The main comparisons are
 - `outputs/test_loss.png`: test loss curves
 - `outputs/grad_norm.png`: probe-batch global gradient norm curves
 - `outputs/branch_ratio.png`: residual down-branch RMS to stream RMS curves
+- `outputs/residual_stream_depth.png`: residual-stream RMS by block index at representative checkpoints
+- `outputs/up_grad_depth.png`: up-projection gradient norm by block index at representative checkpoints
+- `outputs/down_grad_depth.png`: down-projection gradient norm by block index at representative checkpoints
 
 ## Setup
 
@@ -74,6 +77,8 @@ At each diagnostic checkpoint it records:
 - per-layer or per-block parameter norms,
 - activation RMS,
 - residual branch to stream RMS ratios.
+
+The main depth-oriented outputs for this experiment are the residual-stream RMS and per-block gradient-norm profiles at representative checkpoints. Those are the most direct way to compare early versus late residual blocks.
 
 The diagnostic checkpoints include dense early steps and regular checkpoints through the full run, so the experiment can capture both the initialization regime and the long-horizon behavior.
 

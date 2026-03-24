@@ -1,0 +1,32 @@
+Benchmark: 8-bit addition, 49152 train / 16384 test samples
+Training config: steps=3000, batch_size=256, lr=3.00e-03, wd=1.00e-05
+
+mlp-128x2
+  steps=3000, elapsed=3.19s, final_train_loss=6.128e-03, bias_init=False
+  train: mse=6.803e-04, bit_acc=1.0000, exact_acc=1.0000, mean_abs_sum_err=0.000, max_abs_sum_err=0
+  test : mse=7.190e-04, bit_acc=1.0000, exact_acc=1.0000, mean_abs_sum_err=0.000, max_abs_sum_err=0
+
+mlp-256x4-bias
+  steps=3000, elapsed=3.44s, final_train_loss=8.965e-04, bias_init=True
+  train: mse=9.726e-05, bit_acc=1.0000, exact_acc=1.0000, mean_abs_sum_err=0.000, max_abs_sum_err=0
+  test : mse=1.303e-04, bit_acc=1.0000, exact_acc=1.0000, mean_abs_sum_err=0.000, max_abs_sum_err=0
+
+res-64-b16-x6
+  steps=3000, elapsed=8.22s, final_train_loss=7.259e-04, bias_init=False
+  train: mse=7.938e-05, bit_acc=1.0000, exact_acc=1.0000, mean_abs_sum_err=0.000, max_abs_sum_err=0
+  test : mse=8.240e-05, bit_acc=1.0000, exact_acc=1.0000, mean_abs_sum_err=0.000, max_abs_sum_err=0
+
+res-128-b32-x6
+  steps=3000, elapsed=7.00s, final_train_loss=1.230e-04, bias_init=False
+  train: mse=1.345e-05, bit_acc=1.0000, exact_acc=1.0000, mean_abs_sum_err=0.000, max_abs_sum_err=0
+  test : mse=1.420e-05, bit_acc=1.0000, exact_acc=1.0000, mean_abs_sum_err=0.000, max_abs_sum_err=0
+
+res-128-b32-x6-bias
+  steps=3000, elapsed=5.82s, final_train_loss=8.010e-05, bias_init=True
+  train: mse=8.742e-06, bit_acc=1.0000, exact_acc=1.0000, mean_abs_sum_err=0.000, max_abs_sum_err=0
+  test : mse=9.403e-06, bit_acc=1.0000, exact_acc=1.0000, mean_abs_sum_err=0.000, max_abs_sum_err=0
+
+res-256-b64-x8-bias
+  steps=3000, elapsed=9.07s, final_train_loss=2.635e-05, bias_init=True
+  train: mse=2.862e-06, bit_acc=1.0000, exact_acc=1.0000, mean_abs_sum_err=0.000, max_abs_sum_err=0
+  test : mse=3.283e-06, bit_acc=1.0000, exact_acc=1.0000, mean_abs_sum_err=0.000, max_abs_sum_err=0

@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
+from pathlib import Path
 
 os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
 
@@ -16,16 +18,21 @@ from flax import nnx
 from dnn_arithmetic.models import ReluMLP, ResidualReluMLP, batched_predict
 from dnn_arithmetic.training import OptimizerConfig, TrainingConfig, train_model
 
+RUN_DIR = Path(__file__).resolve().parent
+OUTPUT_DIR = RUN_DIR / "outputs"
+METRICS_PATH = OUTPUT_DIR / "metrics.json"
+SUMMARY_PATH = OUTPUT_DIR / "summary.txt"
+
 
 @dataclass(frozen=True)
 class DatasetSplit:
     """Train/test split for the addition benchmark.
 
     Args:
-            x_train: Training inputs.
-            y_train: Training targets.
-            x_test: Held-out test inputs.
-            y_test: Held-out test targets.
+        x_train: Training inputs.
+        y_train: Training targets.
+        x_test: Held-out test inputs.
+        y_test: Held-out test targets.
 
     """
 
@@ -40,11 +47,11 @@ class EvalMetrics:
     """Evaluation metrics for bitwise addition predictions.
 
     Args:
-            mse: Mean squared error over output bits.
-            bit_accuracy: Fraction of correctly recovered output bits.
-            exact_accuracy: Fraction of examples with every output bit correct.
-            mean_abs_sum_error: Mean absolute integer sum error.
-            max_abs_sum_error: Maximum absolute integer sum error.
+        mse: Mean squared error over output bits.
+        bit_accuracy: Fraction of correctly recovered output bits.
+        exact_accuracy: Fraction of examples with every output bit correct.
+        mean_abs_sum_error: Mean absolute integer sum error.
+        max_abs_sum_error: Maximum absolute integer sum error.
 
     """
 
@@ -60,13 +67,13 @@ class ExperimentSpec:
     """Model configuration for one benchmark run.
 
     Args:
-            name: Display name for the experiment.
-            model_kind: Either ``"mlp"`` or ``"residual"``.
-            hidden_dims: Hidden widths for MLP experiments.
-            residual_dim: Width of the residual stream.
-            inter_dim: Bottleneck width inside each residual block.
-            num_blocks: Number of residual blocks.
-            init_output_bias: Whether to initialize the output bias to the target mean.
+        name: Display name for the experiment.
+        model_kind: Either ``"mlp"`` or ``"residual"``.
+        hidden_dims: Hidden widths for MLP experiments.
+        residual_dim: Width of the residual stream.
+        inter_dim: Bottleneck width inside each residual block.
+        num_blocks: Number of residual blocks.
+        init_output_bias: Whether to initialize the output bias to the target mean.
 
     """
 
@@ -79,15 +86,35 @@ class ExperimentSpec:
     init_output_bias: bool = False
 
 
+@dataclass(frozen=True)
+class ExperimentRecord:
+    """Persisted results for a single architecture run.
+
+    Args:
+        spec: Architecture configuration.
+        train_metrics: Metrics on the training split.
+        test_metrics: Metrics on the held-out split.
+        elapsed: Wall-clock training time.
+        final_train_loss: Final logged train loss.
+
+    """
+
+    spec: ExperimentSpec
+    train_metrics: EvalMetrics
+    test_metrics: EvalMetrics
+    elapsed: float
+    final_train_loss: float
+
+
 def _int_to_bits(values: np.ndarray, width: int) -> np.ndarray:
     """Encode integers into little-endian bit vectors.
 
     Args:
-            values: Integer array of shape ``(N,)``.
-            width: Number of output bits.
+        values: Integer array of shape ``(N,)``.
+        width: Number of output bits.
 
     Returns:
-            Float32 bit matrix of shape ``(N, width)``.
+        Float32 bit matrix of shape ``(N, width)``.
 
     """
     shifts = np.arange(width, dtype=np.uint16)
@@ -99,10 +126,10 @@ def _bits_to_int(bit_vectors: np.ndarray) -> np.ndarray:
     """Decode little-endian bit vectors back into integers.
 
     Args:
-            bit_vectors: Binary array of shape ``(N, width)``.
+        bit_vectors: Binary array of shape ``(N, width)``.
 
     Returns:
-            Integer values of shape ``(N,)``.
+        Integer values of shape ``(N,)``.
 
     """
     powers = (1 << np.arange(bit_vectors.shape[1], dtype=np.uint16)).astype(np.uint16)
@@ -113,10 +140,10 @@ def _build_dataset(bit_width: int) -> tuple[np.ndarray, np.ndarray]:
     """Construct exhaustive addition examples for a fixed bit width.
 
     Args:
-            bit_width: Operand width in bits.
+        bit_width: Operand width in bits.
 
     Returns:
-            Tuple ``(x, y)`` with concatenated operand bits and sum bits.
+        Tuple ``(x, y)`` with concatenated operand bits and sum bits.
 
     """
     max_value = 1 << bit_width
@@ -142,13 +169,13 @@ def _split_dataset(
     """Shuffle and split the dataset into train and test subsets.
 
     Args:
-            x_feat: Input features.
-            y_feat: Target features.
-            train_fraction: Fraction of examples used for training.
-            seed: NumPy RNG seed.
+        x_feat: Input features.
+        y_feat: Target features.
+        train_fraction: Fraction of examples used for training.
+        seed: NumPy RNG seed.
 
     Returns:
-            Dataclass containing train and test arrays.
+        Dataclass containing train and test arrays.
 
     """
     if not 0.0 < train_fraction < 1.0:
@@ -225,11 +252,11 @@ def _build_model_factory(
     """Create a model factory matching the training API.
 
     Args:
-            spec: Experiment configuration.
-            target_bias: Mean target vector used for optional bias init.
+        spec: Experiment configuration.
+        target_bias: Mean target vector used for optional bias init.
 
     Returns:
-            Factory compatible with ``train_model``.
+        Factory compatible with ``train_model``.
 
     """
 
@@ -260,11 +287,11 @@ def _evaluate_predictions(y_true: np.ndarray, y_pred: np.ndarray) -> EvalMetrics
     """Compute regression and exactness metrics for bit predictions.
 
     Args:
-            y_true: Ground-truth bit vectors.
-            y_pred: Continuous model predictions.
+        y_true: Ground-truth bit vectors.
+        y_pred: Continuous model predictions.
 
     Returns:
-            Aggregate evaluation metrics.
+        Aggregate evaluation metrics.
 
     """
     mse = float(np.mean(np.square(y_pred - y_true)))
@@ -302,14 +329,17 @@ def _run_experiment(
     config: TrainingConfig,
     *,
     seed: int,
-) -> None:
-    """Train one model and print train/test metrics.
+) -> ExperimentRecord:
+    """Train one model and return train/test metrics.
 
     Args:
-            spec: Experiment configuration.
-            split: Benchmark train/test split.
-            config: Training configuration.
-            seed: JAX seed for this run.
+        spec: Experiment configuration.
+        split: Benchmark train/test split.
+        config: Training configuration.
+        seed: JAX seed for this run.
+
+    Returns:
+        Persistable experiment record.
 
     """
     model_factory = _build_model_factory(spec, split.y_train.mean(axis=0))
@@ -333,14 +363,88 @@ def _run_experiment(
     final_train_loss = (
         result.train_loss_history[-1] if result.train_loss_history else float("nan")
     )
-
-    print(spec.name)
-    print(
-        f"  steps={config.num_steps}, elapsed={result.elapsed:.2f}s, "
-        f"final_train_loss={final_train_loss:.3e}, bias_init={spec.init_output_bias}"
+    return ExperimentRecord(
+        spec=spec,
+        train_metrics=train_metrics,
+        test_metrics=test_metrics,
+        elapsed=result.elapsed,
+        final_train_loss=float(final_train_loss),
     )
-    print(f"  {_format_metrics('train', train_metrics)}")
-    print(f"  {_format_metrics('test ', test_metrics)}")
+
+
+def _record_to_lines(record: ExperimentRecord, num_steps: int) -> list[str]:
+    """Render a compact text summary for one experiment."""
+    return [
+        record.spec.name,
+        (
+            f"  steps={num_steps}, elapsed={record.elapsed:.2f}s, "
+            f"final_train_loss={record.final_train_loss:.3e}, "
+            f"bias_init={record.spec.init_output_bias}"
+        ),
+        f"  {_format_metrics('train', record.train_metrics)}",
+        f"  {_format_metrics('test ', record.test_metrics)}",
+    ]
+
+
+def _write_outputs(
+    args: argparse.Namespace,
+    split: DatasetSplit,
+    config: TrainingConfig,
+    records: list[ExperimentRecord],
+) -> None:
+    """Persist a compact machine-readable and text summary of the run.
+
+    Args:
+        args: Parsed CLI arguments.
+        split: Dataset split used in the run.
+        config: Training configuration.
+        records: Per-model results.
+
+    """
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    metrics_payload = {
+        "run_dir": str(RUN_DIR),
+        "dataset": {
+            "bit_width": args.bit_width,
+            "train_fraction": args.train_fraction,
+            "train_examples": len(split.x_train),
+            "test_examples": len(split.x_test),
+            "input_dim": int(split.x_train.shape[1]),
+            "target_dim": int(split.y_train.shape[1]),
+        },
+        "training": {
+            "num_steps": config.num_steps,
+            "batch_size": config.batch_size,
+            "learning_rate": config.optimizer.learning_rate,
+            "weight_decay": config.optimizer.weight_decay,
+            "warmup_steps": config.optimizer.warmup_steps,
+            "constant_steps": config.optimizer.constant_steps,
+            "lr_end_frac": config.optimizer.lr_end_frac,
+            "grad_clip_norm": config.optimizer.grad_clip_norm,
+            "seed": args.seed,
+        },
+        "results": [asdict(record) for record in records],
+    }
+    METRICS_PATH.write_text(json.dumps(metrics_payload, indent=2) + "\n")
+
+    summary_lines = [
+        (
+            f"Benchmark: {args.bit_width}-bit addition, "
+            f"{len(split.x_train)} train / {len(split.x_test)} test samples"
+        ),
+        (
+            f"Training config: steps={config.num_steps}, batch_size={config.batch_size}, "
+            f"lr={config.optimizer.learning_rate:.2e}, "
+            f"wd={config.optimizer.weight_decay:.2e}"
+        ),
+        "",
+    ]
+    for index, record in enumerate(records):
+        if index > 0:
+            summary_lines.append("")
+        summary_lines.extend(_record_to_lines(record, config.num_steps))
+    SUMMARY_PATH.write_text("\n".join(summary_lines) + "\n")
 
 
 def _parse_args() -> argparse.Namespace:
@@ -391,9 +495,15 @@ def main() -> None:
         f"lr={config.optimizer.learning_rate:.2e}, wd={config.optimizer.weight_decay:.2e}"
     )
 
-    experiments = _make_experiments()
-    for index, spec in enumerate(experiments):
-        _run_experiment(spec, split, config, seed=args.seed + index)
+    records: list[ExperimentRecord] = []
+    for index, spec in enumerate(_make_experiments()):
+        record = _run_experiment(spec, split, config, seed=args.seed + index)
+        records.append(record)
+        for line in _record_to_lines(record, config.num_steps):
+            print(line)
+
+    _write_outputs(args, split, config, records)
+    print(f"Saved outputs to {OUTPUT_DIR}")
 
 
 if __name__ == "__main__":

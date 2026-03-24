@@ -1,0 +1,194 @@
+{
+  "run_dir": "/home/jehan/ml_experiments/dnn-arithmetic/experiments/2026-03-24-addition-8bit",
+  "dataset": {
+    "bit_width": 8,
+    "train_fraction": 0.75,
+    "train_examples": 49152,
+    "test_examples": 16384,
+    "input_dim": 16,
+    "target_dim": 9
+  },
+  "training": {
+    "num_steps": 3000,
+    "batch_size": 256,
+    "learning_rate": 0.003,
+    "weight_decay": 1e-05,
+    "warmup_steps": 100,
+    "constant_steps": 500,
+    "lr_end_frac": 0.05,
+    "grad_clip_norm": 1.0,
+    "seed": 0
+  },
+  "results": [
+    {
+      "spec": {
+        "name": "mlp-128x2",
+        "model_kind": "mlp",
+        "hidden_dims": [
+          128,
+          128
+        ],
+        "residual_dim": 0,
+        "inter_dim": 0,
+        "num_blocks": 0,
+        "init_output_bias": false
+      },
+      "train_metrics": {
+        "mse": 0.0006803357391618192,
+        "bit_accuracy": 1.0,
+        "exact_accuracy": 1.0,
+        "mean_abs_sum_error": 0.0,
+        "max_abs_sum_error": 0
+      },
+      "test_metrics": {
+        "mse": 0.0007189880707301199,
+        "bit_accuracy": 1.0,
+        "exact_accuracy": 1.0,
+        "mean_abs_sum_error": 0.0,
+        "max_abs_sum_error": 0
+      },
+      "elapsed": 3.1894669299945235,
+      "final_train_loss": 0.006128412303514779
+    },
+    {
+      "spec": {
+        "name": "mlp-256x4-bias",
+        "model_kind": "mlp",
+        "hidden_dims": [
+          256,
+          256,
+          256,
+          256
+        ],
+        "residual_dim": 0,
+        "inter_dim": 0,
+        "num_blocks": 0,
+        "init_output_bias": true
+      },
+      "train_metrics": {
+        "mse": 9.726205462357029e-05,
+        "bit_accuracy": 1.0,
+        "exact_accuracy": 1.0,
+        "mean_abs_sum_error": 0.0,
+        "max_abs_sum_error": 0
+      },
+      "test_metrics": {
+        "mse": 0.0001302896998822689,
+        "bit_accuracy": 1.0,
+        "exact_accuracy": 1.0,
+        "mean_abs_sum_error": 0.0,
+        "max_abs_sum_error": 0
+      },
+      "elapsed": 3.440357799641788,
+      "final_train_loss": 0.0008965300681302323
+    },
+    {
+      "spec": {
+        "name": "res-64-b16-x6",
+        "model_kind": "residual",
+        "hidden_dims": [],
+        "residual_dim": 64,
+        "inter_dim": 16,
+        "num_blocks": 6,
+        "init_output_bias": false
+      },
+      "train_metrics": {
+        "mse": 7.937521149870008e-05,
+        "bit_accuracy": 1.0,
+        "exact_accuracy": 1.0,
+        "mean_abs_sum_error": 0.0,
+        "max_abs_sum_error": 0
+      },
+      "test_metrics": {
+        "mse": 8.239667658926919e-05,
+        "bit_accuracy": 1.0,
+        "exact_accuracy": 1.0,
+        "mean_abs_sum_error": 0.0,
+        "max_abs_sum_error": 0
+      },
+      "elapsed": 8.223396725021303,
+      "final_train_loss": 0.0007259217131650075
+    },
+    {
+      "spec": {
+        "name": "res-128-b32-x6",
+        "model_kind": "residual",
+        "hidden_dims": [],
+        "residual_dim": 128,
+        "inter_dim": 32,
+        "num_blocks": 6,
+        "init_output_bias": false
+      },
+      "train_metrics": {
+        "mse": 1.344742577202851e-05,
+        "bit_accuracy": 1.0,
+        "exact_accuracy": 1.0,
+        "mean_abs_sum_error": 0.0,
+        "max_abs_sum_error": 0
+      },
+      "test_metrics": {
+        "mse": 1.4202289094100706e-05,
+        "bit_accuracy": 1.0,
+        "exact_accuracy": 1.0,
+        "mean_abs_sum_error": 0.0,
+        "max_abs_sum_error": 0
+      },
+      "elapsed": 6.99978721421212,
+      "final_train_loss": 0.00012304967218369712
+    },
+    {
+      "spec": {
+        "name": "res-128-b32-x6-bias",
+        "model_kind": "residual",
+        "hidden_dims": [],
+        "residual_dim": 128,
+        "inter_dim": 32,
+        "num_blocks": 6,
+        "init_output_bias": true
+      },
+      "train_metrics": {
+        "mse": 8.742083991819527e-06,
+        "bit_accuracy": 1.0,
+        "exact_accuracy": 1.0,
+        "mean_abs_sum_error": 0.0,
+        "max_abs_sum_error": 0
+      },
+      "test_metrics": {
+        "mse": 9.403498552273959e-06,
+        "bit_accuracy": 1.0,
+        "exact_accuracy": 1.0,
+        "mean_abs_sum_error": 0.0,
+        "max_abs_sum_error": 0
+      },
+      "elapsed": 5.820369487628341,
+      "final_train_loss": 8.009716621018014e-05
+    },
+    {
+      "spec": {
+        "name": "res-256-b64-x8-bias",
+        "model_kind": "residual",
+        "hidden_dims": [],
+        "residual_dim": 256,
+        "inter_dim": 64,
+        "num_blocks": 8,
+        "init_output_bias": true
+      },
+      "train_metrics": {
+        "mse": 2.861999064407428e-06,
+        "bit_accuracy": 1.0,
+        "exact_accuracy": 1.0,
+        "mean_abs_sum_error": 0.0,
+        "max_abs_sum_error": 0
+      },
+      "test_metrics": {
+        "mse": 3.2830653253768105e-06,
+        "bit_accuracy": 1.0,
+        "exact_accuracy": 1.0,
+        "mean_abs_sum_error": 0.0,
+        "max_abs_sum_error": 0
+      },
+      "elapsed": 9.066829168237746,
+      "final_train_loss": 2.634999536894611e-05
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+[project]
+name = "dnn-arithmetic"
+version = "0.1.0"
+description = "Experiments on whether simple DNNs can learn binary arithmetic."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy",
+    "matplotlib",
+    "jax[cuda13]",
+    "flax",
+    "chex",
+    "optax",
+    "orbax-checkpoint",
+    "tqdm",
+    "scipy",
+    "scikit-learn",
+    "pandas",
+    "treescope",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = false

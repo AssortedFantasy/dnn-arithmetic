@@ -1,0 +1,202 @@
+{
+  "run_dir": "/home/jehan/ml_experiments/dnn-arithmetic/experiments/2026-03-24-multiplication-8bit",
+  "dataset": {
+    "operation": "unsigned_multiplication",
+    "bit_width": 8,
+    "train_fraction": 0.75,
+    "train_examples": 49152,
+    "test_examples": 16384,
+    "input_dim": 16,
+    "target_dim": 16
+  },
+  "training": {
+    "num_steps": 6000,
+    "batch_size": 256,
+    "learning_rate": 0.002,
+    "weight_decay": 1e-05,
+    "warmup_steps": 200,
+    "constant_steps": 1000,
+    "lr_end_frac": 0.05,
+    "grad_clip_norm": 1.0,
+    "seed": 0
+  },
+  "results": [
+    {
+      "spec": {
+        "name": "mlp-128x2",
+        "model_kind": "mlp",
+        "hidden_dims": [
+          128,
+          128
+        ],
+        "residual_dim": 0,
+        "inter_dim": 0,
+        "num_blocks": 0,
+        "init_output_bias": false
+      },
+      "train_metrics": {
+        "mse": 0.09339263290166855,
+        "bit_accuracy": 0.8470624089241028,
+        "exact_accuracy": 0.0738932266831398,
+        "mean_abs_product_error": 866.7591145833334,
+        "max_abs_product_error": 30720
+      },
+      "test_metrics": {
+        "mse": 0.09557291865348816,
+        "bit_accuracy": 0.8389816284179688,
+        "exact_accuracy": 0.0621337890625,
+        "mean_abs_product_error": 914.611328125,
+        "max_abs_product_error": 24064
+      },
+      "elapsed": 5.487480568699539,
+      "final_train_loss": 1.4983230221271515
+    },
+    {
+      "spec": {
+        "name": "mlp-256x4-bias",
+        "model_kind": "mlp",
+        "hidden_dims": [
+          256,
+          256,
+          256,
+          256
+        ],
+        "residual_dim": 0,
+        "inter_dim": 0,
+        "num_blocks": 0,
+        "init_output_bias": true
+      },
+      "train_metrics": {
+        "mse": 0.006175327580422163,
+        "bit_accuracy": 0.998528778553009,
+        "exact_accuracy": 0.9783121943473816,
+        "mean_abs_product_error": 11.518229166666666,
+        "max_abs_product_error": 12288
+      },
+      "test_metrics": {
+        "mse": 0.014006317593157291,
+        "bit_accuracy": 0.9884872436523438,
+        "exact_accuracy": 0.8880615234375,
+        "mean_abs_product_error": 131.1279296875,
+        "max_abs_product_error": 28672
+      },
+      "elapsed": 6.272343171294779,
+      "final_train_loss": 0.1018378184735775
+    },
+    {
+      "spec": {
+        "name": "mlp-512x6-bias",
+        "model_kind": "mlp",
+        "hidden_dims": [
+          512,
+          512,
+          512,
+          512,
+          512,
+          512
+        ],
+        "residual_dim": 0,
+        "inter_dim": 0,
+        "num_blocks": 0,
+        "init_output_bias": true
+      },
+      "train_metrics": {
+        "mse": 0.00035714279511012137,
+        "bit_accuracy": 0.9999949336051941,
+        "exact_accuracy": 0.9999186396598816,
+        "mean_abs_product_error": 0.03125,
+        "max_abs_product_error": 1024
+      },
+      "test_metrics": {
+        "mse": 0.005919234827160835,
+        "bit_accuracy": 0.9940452575683594,
+        "exact_accuracy": 0.94793701171875,
+        "mean_abs_product_error": 49.36328125,
+        "max_abs_product_error": 16384
+      },
+      "elapsed": 7.687314125243574,
+      "final_train_loss": 0.006079466012306511
+    },
+    {
+      "spec": {
+        "name": "res-128-b32-x6",
+        "model_kind": "residual",
+        "hidden_dims": [],
+        "residual_dim": 128,
+        "inter_dim": 32,
+        "num_blocks": 6,
+        "init_output_bias": false
+      },
+      "train_metrics": {
+        "mse": 0.07676536589860916,
+        "bit_accuracy": 0.8698844909667969,
+        "exact_accuracy": 0.07965087890625,
+        "mean_abs_product_error": 500.494140625,
+        "max_abs_product_error": 22272
+      },
+      "test_metrics": {
+        "mse": 0.07940272241830826,
+        "bit_accuracy": 0.8610992431640625,
+        "exact_accuracy": 0.068115234375,
+        "mean_abs_product_error": 542.357421875,
+        "max_abs_product_error": 17536
+      },
+      "elapsed": 13.015273727010936,
+      "final_train_loss": 1.2312198674678803
+    },
+    {
+      "spec": {
+        "name": "res-256-b64-x8-bias",
+        "model_kind": "residual",
+        "hidden_dims": [],
+        "residual_dim": 256,
+        "inter_dim": 64,
+        "num_blocks": 8,
+        "init_output_bias": true
+      },
+      "train_metrics": {
+        "mse": 0.032422322779893875,
+        "bit_accuracy": 0.9574177861213684,
+        "exact_accuracy": 0.5469563603401184,
+        "mean_abs_product_error": 135.37565104166666,
+        "max_abs_product_error": 7552
+      },
+      "test_metrics": {
+        "mse": 0.04417914152145386,
+        "bit_accuracy": 0.9358406066894531,
+        "exact_accuracy": 0.44293212890625,
+        "mean_abs_product_error": 239.515625,
+        "max_abs_product_error": 28800
+      },
+      "elapsed": 16.26388226216659,
+      "final_train_loss": 0.5283178707957268
+    },
+    {
+      "spec": {
+        "name": "res-384-b96-x10-bias",
+        "model_kind": "residual",
+        "hidden_dims": [],
+        "residual_dim": 384,
+        "inter_dim": 96,
+        "num_blocks": 10,
+        "init_output_bias": true
+      },
+      "train_metrics": {
+        "mse": 0.02358213998377323,
+        "bit_accuracy": 0.9717521667480469,
+        "exact_accuracy": 0.67169189453125,
+        "mean_abs_product_error": 71.98893229166667,
+        "max_abs_product_error": 8320
+      },
+      "test_metrics": {
+        "mse": 0.041215620934963226,
+        "bit_accuracy": 0.9420814514160156,
+        "exact_accuracy": 0.49688720703125,
+        "mean_abs_product_error": 198.384765625,
+        "max_abs_product_error": 22528
+      },
+      "elapsed": 17.80303934868425,
+      "final_train_loss": 0.3887462839484215
+    }
+  ]
+}

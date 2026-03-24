@@ -25,3 +25,11 @@ def square_root(n):
 ```
 
 * Flax and NNX are being used for neural networks.
+
+* Project layout conventions:
+    * Reusable library code belongs under `src/dnn_arithmetic/`.
+    * Experiments belong under `experiments/` in dated folders, for example `experiments/2026-03-24-addition-8bit/`.
+    * Each experiment folder should keep `run.py`, `notes.md`, and an `outputs/` directory together.
+    * `notes.md` should document the experiment intent, important observations, and how inputs / targets / model sweeps are parameterized.
+    * `outputs/` should stay simple and contain lightweight generated artifacts such as `summary.txt`, `metrics.json`, and plots if needed.
+    * Avoid putting one-off experiment code in top-level `scripts/` when it should live in a dated experiment folder.

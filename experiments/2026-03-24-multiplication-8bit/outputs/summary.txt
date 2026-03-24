@@ -1,0 +1,32 @@
+Benchmark: 8-bit unsigned multiplication, 49152 train / 16384 test samples
+Training config: steps=6000, batch_size=256, lr=2.00e-03, wd=1.00e-05
+
+mlp-128x2
+  steps=6000, elapsed=5.49s, final_train_loss=1.498e+00, bias_init=False
+  train: mse=9.339e-02, bit_acc=0.8471, exact_acc=0.0739, mean_abs_prod_err=866.759, max_abs_prod_err=30720
+  test : mse=9.557e-02, bit_acc=0.8390, exact_acc=0.0621, mean_abs_prod_err=914.611, max_abs_prod_err=24064
+
+mlp-256x4-bias
+  steps=6000, elapsed=6.27s, final_train_loss=1.018e-01, bias_init=True
+  train: mse=6.175e-03, bit_acc=0.9985, exact_acc=0.9783, mean_abs_prod_err=11.518, max_abs_prod_err=12288
+  test : mse=1.401e-02, bit_acc=0.9885, exact_acc=0.8881, mean_abs_prod_err=131.128, max_abs_prod_err=28672
+
+mlp-512x6-bias
+  steps=6000, elapsed=7.69s, final_train_loss=6.079e-03, bias_init=True
+  train: mse=3.571e-04, bit_acc=1.0000, exact_acc=0.9999, mean_abs_prod_err=0.031, max_abs_prod_err=1024
+  test : mse=5.919e-03, bit_acc=0.9940, exact_acc=0.9479, mean_abs_prod_err=49.363, max_abs_prod_err=16384
+
+res-128-b32-x6
+  steps=6000, elapsed=13.02s, final_train_loss=1.231e+00, bias_init=False
+  train: mse=7.677e-02, bit_acc=0.8699, exact_acc=0.0797, mean_abs_prod_err=500.494, max_abs_prod_err=22272
+  test : mse=7.940e-02, bit_acc=0.8611, exact_acc=0.0681, mean_abs_prod_err=542.357, max_abs_prod_err=17536
+
+res-256-b64-x8-bias
+  steps=6000, elapsed=16.26s, final_train_loss=5.283e-01, bias_init=True
+  train: mse=3.242e-02, bit_acc=0.9574, exact_acc=0.5470, mean_abs_prod_err=135.376, max_abs_prod_err=7552
+  test : mse=4.418e-02, bit_acc=0.9358, exact_acc=0.4429, mean_abs_prod_err=239.516, max_abs_prod_err=28800
+
+res-384-b96-x10-bias
+  steps=6000, elapsed=17.80s, final_train_loss=3.887e-01, bias_init=True
+  train: mse=2.358e-02, bit_acc=0.9718, exact_acc=0.6717, mean_abs_prod_err=71.989, max_abs_prod_err=8320
+  test : mse=4.122e-02, bit_acc=0.9421, exact_acc=0.4969, mean_abs_prod_err=198.385, max_abs_prod_err=22528

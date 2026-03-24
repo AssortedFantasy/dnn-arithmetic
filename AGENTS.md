@@ -4,7 +4,7 @@
 
 * Virtual enviroments are managed with `uv`.
 
-* You should try to use types. Avoid dict typing and instead use dataclasses. Some library code results in type errors due to a lack of annotations and that is acceptable.
+* Use types. Avoid dict typing and instead use dataclasses. Some library code results in type errors due to a lack of annotations and that is acceptable.
 
 * Do not leave deprecated code for backwards compatibility. It causes confusion and maintenance challenges. This is a research project, not a dependency, priority is low technical debt and fast iteration speed.
 
@@ -31,5 +31,5 @@ def square_root(n):
     * Experiments belong under `experiments/` in dated folders, for example `experiments/2026-03-24-addition-8bit/`.
     * Each experiment folder should keep `run.py`, `notes.md`, and an `outputs/` directory together.
     * `notes.md` should document the experiment intent, important observations, and how inputs / targets / model sweeps are parameterized.
-    * `outputs/` should stay simple and contain lightweight generated artifacts such as `summary.txt`, `metrics.json`, and plots if needed.
+    * `outputs/` should stay simple and contain lightweight generated artifacts.
     * Avoid putting one-off experiment code in top-level `scripts/` when it should live in a dated experiment folder.

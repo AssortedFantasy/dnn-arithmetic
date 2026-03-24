@@ -1,0 +1,31 @@
+Architecture sweep: 8-bit unsigned multiplication, mlp-256x4-bias baseline included
+Training config: steps=6000, batch_size=256, lr=2.00e-03, wd=1.00e-05, clip=1.00, train_fraction=0.75
+
+Best final train loss
+- res-256-b128-x8-bias: final_train_loss=2.630e-02, params=535824, elapsed=19.89s
+
+Full results
+mlp-256x4-bias
+  params=205840, elapsed=8.45s, final_train_loss=4.109e-02, final_test_loss=1.255e-01
+  train: mse=2.536e-03, bit_acc=0.9998, exact_acc=0.9968, mean_abs_prod_err=2.266, max_abs_prod_err=6144
+  test : mse=7.844e-03, bit_acc=0.9942, exact_acc=0.9452, mean_abs_prod_err=97.753, max_abs_prod_err=28672
+
+res-256-b64-x8-bias
+  params=273168, elapsed=20.44s, final_train_loss=4.152e-01, final_test_loss=5.795e-01
+  train: mse=2.534e-02, bit_acc=0.9692, exact_acc=0.6428, mean_abs_prod_err=90.809, max_abs_prod_err=7936
+  test : mse=3.622e-02, bit_acc=0.9502, exact_acc=0.5344, mean_abs_prod_err=192.060, max_abs_prod_err=16384
+
+res-256-b128-x8-bias
+  params=535824, elapsed=19.89s, final_train_loss=2.630e-02, final_test_loss=9.816e-02
+  train: mse=1.554e-03, bit_acc=0.9999, exact_acc=0.9981, mean_abs_prod_err=0.729, max_abs_prod_err=8192
+  test : mse=6.135e-03, bit_acc=0.9955, exact_acc=0.9519, mean_abs_prod_err=58.197, max_abs_prod_err=24576
+
+dense-res-256-b64-x8-bias
+  params=273204, elapsed=36.33s, final_train_loss=4.023e-01, final_test_loss=5.051e-01
+  train: mse=2.473e-02, bit_acc=0.9700, exact_acc=0.6125, mean_abs_prod_err=147.751, max_abs_prod_err=14336
+  test : mse=3.157e-02, bit_acc=0.9579, exact_acc=0.5272, mean_abs_prod_err=235.529, max_abs_prod_err=18432
+
+dense-res-256-b128-x8-bias
+  params=535860, elapsed=34.48s, final_train_loss=5.679e-02, final_test_loss=1.227e-01
+  train: mse=3.380e-03, bit_acc=0.9995, exact_acc=0.9932, mean_abs_prod_err=1.947, max_abs_prod_err=5120
+  test : mse=7.669e-03, bit_acc=0.9961, exact_acc=0.9577, mean_abs_prod_err=40.484, max_abs_prod_err=20480

@@ -1,0 +1,15 @@
+Dense skip-weight analysis
+
+dense-res-256-b64-x8-bias
+  params=273204, elapsed=37.01s, final_train_loss=5.965e-01, final_test_loss=7.394e-01
+  mean_first_state_weight=0.462, mean_previous_state_weight=0.354
+  argmax_sources_by_block=[0, 0, 0, 0, 0, 0, 6, 7]
+  heatmap=/home/jehan/ml_experiments/dnn-arithmetic/experiments/2026-03-24-architecture-sweep/outputs/dense-res-256-b64-x8-bias-mix-weights.png
+  raw_heatmap=/home/jehan/ml_experiments/dnn-arithmetic/experiments/2026-03-24-architecture-sweep/outputs/dense-res-256-b64-x8-bias-mix-weights-raw.png
+
+dense-res-256-b128-x8-bias
+  params=535860, elapsed=34.70s, final_train_loss=4.151e-02, final_test_loss=1.034e-01
+  mean_first_state_weight=0.540, mean_previous_state_weight=0.305
+  argmax_sources_by_block=[0, 0, 0, 0, 0, 0, 0, 7]
+  heatmap=/home/jehan/ml_experiments/dnn-arithmetic/experiments/2026-03-24-architecture-sweep/outputs/dense-res-256-b128-x8-bias-mix-weights.png
+  raw_heatmap=/home/jehan/ml_experiments/dnn-arithmetic/experiments/2026-03-24-architecture-sweep/outputs/dense-res-256-b128-x8-bias-mix-weights-raw.png

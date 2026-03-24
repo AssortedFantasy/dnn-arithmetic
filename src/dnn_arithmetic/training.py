@@ -28,6 +28,7 @@ ArrayNp = np.ndarray
 ArrayJnp = jax.Array
 ModelFactory = Callable[[int, int, jax.Array], Module]
 EvalDataset = tuple[ArrayNp, ArrayNp]
+TrainingLogCallback = Callable[[int, float, float | None], None]
 
 
 @dataclass(frozen=True)
@@ -259,6 +260,7 @@ def train_model(
     config: TrainingConfig,
     model_factory: ModelFactory,
     eval_data: EvalDataset | None = None,
+    on_log: TrainingLogCallback | None = None,
 ) -> TrainResult:
     """Train a single model on a dataset.
 
@@ -269,6 +271,8 @@ def train_model(
         config: Training configuration.
         model_factory: Callable mapping ``(in_dim, out_dim, key)`` to a model.
         eval_data: Optional held-out dataset used only for evaluation logging.
+        on_log: Optional callback invoked after each logging event with
+            ``(step, train_loss, test_loss)``.
 
     Returns:
         Training result containing the model and logged losses.
@@ -358,15 +362,19 @@ def train_model(
             and len(x_test) > 0
             and test_batch_size is not None
         ):
-            test_loss_history.append(
-                _evaluate_model(
-                    model,
-                    x_test,
-                    y_test,
-                    test_batch_size,
-                    test_iter_key,
-                )
+            test_loss = _evaluate_model(
+                model,
+                x_test,
+                y_test,
+                test_batch_size,
+                test_iter_key,
             )
+            test_loss_history.append(test_loss)
+        else:
+            test_loss = None
+
+        if on_log is not None:
+            on_log(step + 1, train_loss_history[-1], test_loss)
 
     if interval_batches > 0:
         train_loss_history.append(interval_loss_total / interval_batches)
@@ -377,15 +385,19 @@ def train_model(
             and len(x_test) > 0
             and test_batch_size is not None
         ):
-            test_loss_history.append(
-                _evaluate_model(
-                    model,
-                    x_test,
-                    y_test,
-                    test_batch_size,
-                    test_iter_key,
-                )
+            test_loss = _evaluate_model(
+                model,
+                x_test,
+                y_test,
+                test_batch_size,
+                test_iter_key,
             )
+            test_loss_history.append(test_loss)
+        else:
+            test_loss = None
+
+        if on_log is not None:
+            on_log(config.num_steps, train_loss_history[-1], test_loss)
 
     elapsed = time.perf_counter() - start_time
     final_loss = train_loss_history[-1] if train_loss_history else float("nan")

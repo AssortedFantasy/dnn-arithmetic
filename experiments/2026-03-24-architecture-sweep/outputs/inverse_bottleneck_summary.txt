@@ -1,0 +1,22 @@
+Inverse-bottleneck residual sweep: 8-bit unsigned multiplication
+Training config: steps=6000, batch_size=256, lr=2.00e-03, wd=1.00e-05, clip=1.00, train_fraction=0.75
+Configs: ['res-r64-b128-x8', 'res-r32-b128-x8', 'res-r64-b256-x8']
+
+Best final train loss
+- res-r64-b256-x8: final_train_loss=1.080e-03, params=266832, elapsed=20.27s
+
+Full results (sorted by train loss)
+res-r64-b256-x8
+  params=266832, elapsed=20.27s, final_train_loss=1.080e-03, final_test_loss=5.852e-03
+  train: mse=6.735e-05, bit_acc=1.0000, exact_acc=0.9999, mean_abs_prod_err=0.052, max_abs_prod_err=1024
+  test : mse=3.657e-04, bit_acc=0.9998, exact_acc=0.9979, mean_abs_prod_err=4.617, max_abs_prod_err=8192
+
+res-r64-b128-x8
+  params=134736, elapsed=20.28s, final_train_loss=1.469e-02, final_test_loss=3.539e-02
+  train: mse=8.892e-04, bit_acc=0.9999, exact_acc=0.9991, mean_abs_prod_err=0.352, max_abs_prod_err=2048
+  test : mse=2.212e-03, bit_acc=0.9992, exact_acc=0.9926, mean_abs_prod_err=20.426, max_abs_prod_err=24576
+
+res-r32-b128-x8
+  params=67888, elapsed=19.95s, final_train_loss=5.704e-01, final_test_loss=6.857e-01
+  train: mse=3.534e-02, bit_acc=0.9493, exact_acc=0.4034, mean_abs_prod_err=166.141, max_abs_prod_err=30976
+  test : mse=4.286e-02, bit_acc=0.9331, exact_acc=0.3264, mean_abs_prod_err=248.643, max_abs_prod_err=31104

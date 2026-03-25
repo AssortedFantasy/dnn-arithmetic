@@ -1,0 +1,97 @@
+Residual dimension sweep: 8-bit unsigned multiplication
+Training config: steps=6000, batch_size=256, lr=2.00e-03, wd=1.00e-05, clip=1.00, train_fraction=0.75
+Sweep: num_blocks=[4, 6, 8], residual_dim=[128, 256], inter_dim=[32, 64, 128]
+
+Best final train loss
+- res-r128-b128-x8: final_train_loss=5.581e-03, params=268432, elapsed=20.56s
+
+Full results (sorted by train loss)
+res-r128-b128-x8
+  params=268432, elapsed=20.56s, final_train_loss=5.581e-03, final_test_loss=2.660e-02
+  train: mse=3.270e-04, bit_acc=1.0000, exact_acc=0.9997, mean_abs_prod_err=0.122, max_abs_prod_err=1024
+  test : mse=1.663e-03, bit_acc=0.9989, exact_acc=0.9878, mean_abs_prod_err=33.320, max_abs_prod_err=26624
+
+res-r128-b128-x6
+  params=202384, elapsed=17.14s, final_train_loss=3.237e-02, final_test_loss=7.171e-02
+  train: mse=1.933e-03, bit_acc=0.9998, exact_acc=0.9975, mean_abs_prod_err=1.405, max_abs_prod_err=12288
+  test : mse=4.482e-03, bit_acc=0.9978, exact_acc=0.9788, mean_abs_prod_err=52.656, max_abs_prod_err=24576
+
+res-r256-b128-x8
+  params=535824, elapsed=20.77s, final_train_loss=4.389e-02, final_test_loss=1.543e-01
+  train: mse=2.613e-03, bit_acc=0.9998, exact_acc=0.9966, mean_abs_prod_err=1.497, max_abs_prod_err=2048
+  test : mse=9.641e-03, bit_acc=0.9925, exact_acc=0.9233, mean_abs_prod_err=93.977, max_abs_prod_err=30720
+
+res-r128-b64-x8
+  params=136848, elapsed=20.83s, final_train_loss=7.441e-02, final_test_loss=1.211e-01
+  train: mse=4.507e-03, bit_acc=0.9991, exact_acc=0.9877, mean_abs_prod_err=7.901, max_abs_prod_err=6144
+  test : mse=7.568e-03, bit_acc=0.9959, exact_acc=0.9584, mean_abs_prod_err=52.023, max_abs_prod_err=20480
+
+res-r256-b128-x6
+  params=403984, elapsed=17.58s, final_train_loss=2.508e-01, final_test_loss=4.548e-01
+  train: mse=1.508e-02, bit_acc=0.9845, exact_acc=0.7943, mean_abs_prod_err=45.453, max_abs_prod_err=16512
+  test : mse=2.842e-02, bit_acc=0.9636, exact_acc=0.6450, mean_abs_prod_err=153.666, max_abs_prod_err=26624
+
+res-r256-b128-x4
+  params=272144, elapsed=13.55s, final_train_loss=3.067e-01, final_test_loss=4.211e-01
+  train: mse=1.862e-02, bit_acc=0.9854, exact_acc=0.8067, mean_abs_prod_err=104.663, max_abs_prod_err=17152
+  test : mse=2.632e-02, bit_acc=0.9738, exact_acc=0.7092, mean_abs_prod_err=214.740, max_abs_prod_err=28928
+
+res-r128-b128-x4
+  params=136336, elapsed=13.89s, final_train_loss=3.325e-01, final_test_loss=4.451e-01
+  train: mse=2.029e-02, bit_acc=0.9798, exact_acc=0.7358, mean_abs_prod_err=67.966, max_abs_prod_err=13184
+  test : mse=2.782e-02, bit_acc=0.9678, exact_acc=0.6538, mean_abs_prod_err=163.861, max_abs_prod_err=31616
+
+res-r256-b64-x8
+  params=273168, elapsed=20.65s, final_train_loss=4.198e-01, final_test_loss=5.897e-01
+  train: mse=2.562e-02, bit_acc=0.9673, exact_acc=0.6073, mean_abs_prod_err=83.465, max_abs_prod_err=24576
+  test : mse=3.686e-02, bit_acc=0.9471, exact_acc=0.4866, mean_abs_prod_err=199.532, max_abs_prod_err=24576
+
+res-r128-b64-x6
+  params=103696, elapsed=17.23s, final_train_loss=4.368e-01, final_test_loss=5.362e-01
+  train: mse=2.700e-02, bit_acc=0.9669, exact_acc=0.5916, mean_abs_prod_err=105.130, max_abs_prod_err=20480
+  test : mse=3.351e-02, bit_acc=0.9538, exact_acc=0.5104, mean_abs_prod_err=178.172, max_abs_prod_err=32640
+
+res-r256-b64-x6
+  params=206992, elapsed=17.33s, final_train_loss=6.568e-01, final_test_loss=7.938e-01
+  train: mse=4.036e-02, bit_acc=0.9418, exact_acc=0.4329, mean_abs_prod_err=180.008, max_abs_prod_err=28672
+  test : mse=4.962e-02, bit_acc=0.9228, exact_acc=0.3521, mean_abs_prod_err=268.953, max_abs_prod_err=19968
+
+res-r128-b32-x8
+  params=71056, elapsed=20.52s, final_train_loss=8.543e-01, final_test_loss=9.099e-01
+  train: mse=5.295e-02, bit_acc=0.9188, exact_acc=0.2149, mean_abs_prod_err=315.051, max_abs_prod_err=32640
+  test : mse=5.687e-02, bit_acc=0.9085, exact_acc=0.1816, mean_abs_prod_err=393.160, max_abs_prod_err=32384
+
+res-r256-b32-x6
+  params=108496, elapsed=17.20s, final_train_loss=9.030e-01, final_test_loss=9.505e-01
+  train: mse=5.606e-02, bit_acc=0.9109, exact_acc=0.1898, mean_abs_prod_err=286.327, max_abs_prod_err=28544
+  test : mse=5.941e-02, bit_acc=0.9018, exact_acc=0.1680, mean_abs_prod_err=330.314, max_abs_prod_err=28672
+
+res-r256-b32-x8
+  params=141840, elapsed=20.55s, final_train_loss=9.066e-01, final_test_loss=9.814e-01
+  train: mse=5.608e-02, bit_acc=0.9111, exact_acc=0.2221, mean_abs_prod_err=307.630, max_abs_prod_err=28992
+  test : mse=6.134e-02, bit_acc=0.8979, exact_acc=0.1837, mean_abs_prod_err=377.990, max_abs_prod_err=32768
+
+res-r256-b64-x4
+  params=140816, elapsed=14.10s, final_train_loss=9.256e-01, final_test_loss=1.005e+00
+  train: mse=5.752e-02, bit_acc=0.9103, exact_acc=0.2099, mean_abs_prod_err=340.762, max_abs_prod_err=31744
+  test : mse=6.279e-02, bit_acc=0.8969, exact_acc=0.1707, mean_abs_prod_err=411.537, max_abs_prod_err=31744
+
+res-r128-b64-x4
+  params=70544, elapsed=14.17s, final_train_loss=9.982e-01, final_test_loss=1.052e+00
+  train: mse=6.195e-02, bit_acc=0.9006, exact_acc=0.1533, mean_abs_prod_err=402.397, max_abs_prod_err=15744
+  test : mse=6.578e-02, bit_acc=0.8896, exact_acc=0.1277, mean_abs_prod_err=460.113, max_abs_prod_err=25728
+
+res-r128-b32-x6
+  params=54352, elapsed=17.05s, final_train_loss=1.117e+00, final_test_loss=1.158e+00
+  train: mse=6.933e-02, bit_acc=0.8862, exact_acc=0.1273, mean_abs_prod_err=453.376, max_abs_prod_err=32576
+  test : mse=7.235e-02, bit_acc=0.8766, exact_acc=0.1100, mean_abs_prod_err=500.318, max_abs_prod_err=32576
+
+res-r256-b32-x4
+  params=75152, elapsed=13.45s, final_train_loss=1.329e+00, final_test_loss=1.354e+00
+  train: mse=8.258e-02, bit_acc=0.8603, exact_acc=0.0663, mean_abs_prod_err=597.655, max_abs_prod_err=27712
+  test : mse=8.463e-02, bit_acc=0.8534, exact_acc=0.0596, mean_abs_prod_err=635.069, max_abs_prod_err=28352
+
+res-r128-b32-x4
+  params=37648, elapsed=13.44s, final_train_loss=1.406e+00, final_test_loss=1.429e+00
+  train: mse=8.766e-02, bit_acc=0.8488, exact_acc=0.0441, mean_abs_prod_err=713.733, max_abs_prod_err=28416
+  test : mse=8.933e-02, bit_acc=0.8421, exact_acc=0.0400, mean_abs_prod_err=739.082, max_abs_prod_err=29504

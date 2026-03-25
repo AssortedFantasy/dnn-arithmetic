@@ -193,13 +193,14 @@ _l2_val_and_grad = nnx.value_and_grad(_l2_loss)
 def _train_step(
     model: Module,
     optimizer: Optimizer[Module],
+    metrics: nnx.metrics.Average,
     x_batch: ArrayJnp,
     y_batch: ArrayJnp,
-) -> ArrayJnp:
-    """Run one optimizer step and return the batch loss."""
+) -> None:
+    """Run one optimizer step and accumulate the batch loss into metrics."""
     loss, grads = _l2_val_and_grad(model, x_batch, y_batch)
     optimizer.update(model, grads)
-    return loss
+    metrics.update(values=loss)
 
 
 @nnx.jit
@@ -334,27 +335,25 @@ def train_model(
         test_batch_size = _find_valid_batch_size(config.batch_size, len(x_test))
 
     optimizer = _init_optimizer(model, config.optimizer, total_steps=config.num_steps)
+    train_metrics = nnx.metrics.Average()
+    cached_train_step = nnx.cached_partial(_train_step, model, optimizer, train_metrics)
 
     train_loss_history: list[float] = []
     test_loss_history: list[float] = []
     step_history: list[int] = []
-    interval_loss_total = 0.0
-    interval_batches = 0
 
     start_time = time.perf_counter()
     for step in range(config.num_steps):
         x_batch, y_batch = next(batch_iter)
-        batch_loss = float(_train_step(model, optimizer, x_batch, y_batch))
-        interval_loss_total += batch_loss
-        interval_batches += 1
+        cached_train_step(x_batch, y_batch)
 
         if (step + 1) % config.log_every != 0:
             continue
 
-        train_loss_history.append(interval_loss_total / interval_batches)
+        avg_train_loss = float(train_metrics.compute())
+        train_metrics.reset()
+        train_loss_history.append(avg_train_loss)
         step_history.append(step + 1)
-        interval_loss_total = 0.0
-        interval_batches = 0
 
         if (
             x_test is not None
@@ -376,8 +375,11 @@ def train_model(
         if on_log is not None:
             on_log(step + 1, train_loss_history[-1], test_loss)
 
-    if interval_batches > 0:
-        train_loss_history.append(interval_loss_total / interval_batches)
+    # Flush any remaining steps that didn't hit a log boundary.
+    if (config.num_steps % config.log_every) != 0:
+        avg_train_loss = float(train_metrics.compute())
+        train_metrics.reset()
+        train_loss_history.append(avg_train_loss)
         step_history.append(config.num_steps)
         if (
             x_test is not None

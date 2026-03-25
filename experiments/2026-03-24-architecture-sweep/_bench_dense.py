@@ -1,4 +1,4 @@
-"""Benchmark: DenseReluResNet vs ResidualReluMLP at r64-b256-x8."""
+"""Benchmark: DenseReluResNet variants vs ResidualReluMLP at r64-b256-x8."""
 
 from __future__ import annotations
 
@@ -8,7 +8,11 @@ os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
 
 import jax
 import numpy as np
-from experimental_models import DenseReluResNet
+from experimental_models import (
+    DenseReluResNet,
+    DenseReluResNetConcat,
+    DenseReluResNetPrealloc,
+)
 from flax import nnx
 
 from dnn_arithmetic.models import ResidualReluMLP, batched_predict
@@ -89,7 +93,9 @@ def main() -> None:
 
     configs: list[tuple[str, type]] = [
         ("ResidualReluMLP", ResidualReluMLP),
-        ("DenseReluResNet", DenseReluResNet),
+        ("DenseReluResNet (list)", DenseReluResNet),
+        ("DenseReluResNet (concat)", DenseReluResNetConcat),
+        ("DenseReluResNet (prealloc)", DenseReluResNetPrealloc),
     ]
 
     for name, cls in configs:
